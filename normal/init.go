@@ -86,10 +86,10 @@ func GetSm2P256V1() P256V1Curve {
 // (1) 利用GO语言标准包crypto/rand生成随机数rand;
 // (2) 将SM2推荐曲线参数和随机数rand输入GO语言标准包crypto/elliptic的公钥对生成方法GenerateKey()，生成密钥对核心参数(priv, x, y);
 // (3) 根据PublicKey类和PrivateKey类的定义生成公钥和私钥的实例，并将上述核心参数赋值给实例各相应属性以完成初始化.
-func GenerateKey(rand io.Reader) (*PrivateKey, *PublicKey, error) {
+func GenerateKey(rand io.Reader) (string, string, error) {
 	priv, x, y, err := elliptic.GenerateKey(sm2P256V1, rand)
 	if err != nil {
-		return nil, nil, err
+		return "", "", err
 	}
 	privateKey := new(PrivateKey)
 	privateKey.Curve = sm2P256V1
@@ -98,7 +98,11 @@ func GenerateKey(rand io.Reader) (*PrivateKey, *PublicKey, error) {
 	publicKey.Curve = sm2P256V1
 	publicKey.X = x
 	publicKey.Y = y
-	return privateKey, publicKey, nil
+	d := BigintToString(privateKey.D)
+	px := BigintToString(publicKey.X)
+	py := BigintToString(publicKey.Y)
+	p := fmt.Sprintf("%s%s", px, py)
+	return d, p, nil
 }
 
 // RawBytesToPublicKey 将字节数组形式的原始格式数据转化为SM2公钥的方法:
@@ -236,7 +240,7 @@ func MsgToDigest(msg string) *big.Int {
 
 // 字符串转[]byte数组
 func StringToByte(s string) []byte {
-	s_byte, _ := hex.DecodeString(s)
+	s_byte, _ := hex.DecodeString(s) //asn1.Marshal(s) //hex.DecodeString(s)
 	return s_byte
 
 }
@@ -249,7 +253,24 @@ func ByteToBigint(b []byte) *big.Int {
 
 // 字符串转大数
 func StringToBigint(s string) *big.Int {
-	s_byte := StringToByte(s)
-	s_bigint := ByteToBigint(s_byte)
-	return s_bigint
+	//bigint, _ := new(big.Int).SetString(s, 16)
+	byte := StringToByte(s)
+	bigint := ByteToBigint(byte)
+	return bigint
+}
+
+func ByteToString(b []byte) string {
+	s := hex.EncodeToString(b)
+	return s
+}
+
+func BigintToByte(int *big.Int) []byte {
+	byte := int.Bytes() //asn1.Marshal(int)
+	return byte
+}
+
+func BigintToString(int *big.Int) string {
+	byte := BigintToByte(int)
+	s := ByteToString(byte)
+	return s
 }

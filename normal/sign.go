@@ -2,7 +2,6 @@ package normal
 
 import (
 	"crypto/rand"
-	"encoding/asn1"
 	"encoding/hex"
 	"math/big"
 	"sm2/util"
@@ -10,6 +9,7 @@ import (
 
 // 私钥格式化
 func PrivToPrivateKey(priv string) *PrivateKey {
+	//d_bigint := StringToBigint(priv)
 	d_bigint := StringToBigint(priv)
 	var privateKey PrivateKey
 	privateKey.D = d_bigint
@@ -54,18 +54,17 @@ func SignByRS(priv *PrivateKey, digest *big.Int) (r, s *big.Int, err error) {
 }
 
 // 将签名结果转换为string
-func Sm2_Sign(priv, msg string) (string, error) {
+func Sm2_Sign(msg, priv string) (string, error) {
 	privateKey := PrivToPrivateKey(priv)
 	digest := MsgToDigest(msg)
 	r, s, err := SignByRS(privateKey, digest)
 	if err != nil {
 		return "", err
 	}
-	sig_byte, err := asn1.Marshal(sm2Signature{r, s})
-	if err != nil {
-		return "", err
-	}
-	sig := hex.EncodeToString(sig_byte)
+	r_bytes := r.Bytes()
+	s_bytes := s.Bytes()
+	sig_bytes := append(r_bytes, s_bytes...)
+	sig := hex.EncodeToString(sig_bytes)
 
 	return sig, nil
 

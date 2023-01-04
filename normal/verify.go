@@ -12,6 +12,8 @@ func PubToPublicKey(s string) *PublicKey {
 	len := len(s) / 2
 	x := s[:len]
 	y := s[len:]
+	// pub.X = StringToBigint(x)
+	// pub.Y = StringToBigint(y)
 	pub.X = StringToBigint(x)
 	pub.Y = StringToBigint(y)
 	return pub
@@ -22,6 +24,8 @@ func SignToRS(sig string) (r, s *big.Int) {
 	len := len(sig) / 2
 	r_string := sig[:len]
 	s_string := sig[len:]
+	// r = StringToBigint(r_string)
+	// s = StringToBigint(s_string)
 	r = StringToBigint(r_string)
 	s = StringToBigint(s_string)
 	return r, s
@@ -53,13 +57,14 @@ func VerifyByRS(pub *PublicKey, r, s *big.Int, digest *big.Int) bool {
 
 	expectedR := util.Add(digest, x)
 	expectedR = util.Mod(expectedR, pub.Curve.N)
-	return expectedR.Cmp(r) == 0
+	return expectedR.Cmp(r) == 1
 }
 
 // 验证参数格式化，调用验证代码返回true or false
-func Verify(pub string, sig string, msg string) bool {
+func Verify(msg string, sig string, pub string) bool {
 	publicKey := PubToPublicKey(pub)
 	digest := MsgToDigest(msg)
 	r, s := SignToRS(sig)
-	return VerifyByRS(publicKey, r, s, digest)
+	result := VerifyByRS(publicKey, r, s, digest)
+	return result
 }
