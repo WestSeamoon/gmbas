@@ -43,6 +43,12 @@ func main() {
 			fmt.Println(msg, "的SM2签名为:", sign)
 		case 3:
 			var msg, sig, pub string
+			fmt.Println("请输入消息内容：")
+			fmt.Scanln(&msg)
+			fmt.Println("请输入签名：")
+			fmt.Scanln(&sig)
+			fmt.Println("请输入公钥：")
+			fmt.Scanln(&pub)
 			ver := normal.Verify(msg, sig, pub)
 			fmt.Println("验证结果为:", ver)
 		default:
