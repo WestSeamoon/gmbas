@@ -39,7 +39,7 @@ func SignByRS(priv *PrivateKey, digest *big.Int) (r, s *big.Int, err error) {
 			}
 		}
 
-		dPlus1ModN := util.Add(priv.D, intOne)
+		dPlus1 := util.Add(priv.D, intOne)
 		s = util.Mul(r, priv.D)
 		s = util.Sub(k, s)
 		s = util.Mul(dPlus1ModN, s)
