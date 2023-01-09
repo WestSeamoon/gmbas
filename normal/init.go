@@ -47,6 +47,11 @@ type PrivateKey struct {
 	Curve P256V1Curve
 }
 
+type Sm2Signature struct {
+	R *big.Int
+	S *big.Int
+}
+
 // init() 初始化国密SM2推荐参数计算得出的椭圆曲线。
 func init() {
 	initSm2P256V1()
@@ -199,7 +204,7 @@ func CalculatePubKey(priv *PrivateKey) *PublicKey {
 // (2) 利用标准库crypto/rand生成随机数
 // (3) 审核随机数范围[1, max)
 // (4) 本算法中max为基础域的阶数n
-func nextK(rnd io.Reader, max *big.Int) (*big.Int, error) {
+func NextK(rnd io.Reader, max *big.Int) (*big.Int, error) {
 	intOne := new(big.Int).SetInt64(1)
 	var k *big.Int
 	var err error
@@ -223,15 +228,6 @@ func bigIntTo32Bytes(bn *big.Int) []byte {
 	}
 	byteArr = append(make([]byte, KeyBytes-byteArrLen), byteArr...)
 	return byteArr
-}
-
-// 消息取hash并转换为*big.Int
-func MsgToDigest(msg string) *big.Int {
-	var msg_byte []byte = []byte(msg)
-	var sha_32byte = sha256.Sum256(msg_byte)
-	sha_byte := sha_32byte[:]
-	digest := new(big.Int).SetBytes(sha_byte)
-	return digest
 }
 
 // 字符串转[]byte数组
@@ -269,4 +265,37 @@ func BigintToString(int *big.Int) string {
 	byte := BigintToByte(int)
 	s := ByteToString(byte)
 	return s
+}
+
+// 消息取hash并转换为*big.Int
+func MsgToDigest(msg string) *big.Int {
+	var msg_byte []byte = []byte(msg)
+	var sha_32byte = sha256.Sum256(msg_byte)
+	sha_byte := sha_32byte[:]
+	digest := new(big.Int).SetBytes(sha_byte)
+	return digest
+}
+
+// 公钥格式化
+func PubToPublicKey(s string) *PublicKey {
+	pub := new(PublicKey)
+	pub.Curve = GetSm2P256V1()
+	len := len(s) / 2
+	x := s[:len]
+	y := s[len:]
+	// pub.X = StringToBigint(x)
+	// pub.Y = StringToBigint(y)
+	pub.X = StringToBigint(x)
+	pub.Y = StringToBigint(y)
+	return pub
+}
+
+// 私钥格式化
+func PrivToPrivateKey(priv string) *PrivateKey {
+	//d_bigint := StringToBigint(priv)
+	d_bigint := StringToBigint(priv)
+	var privateKey PrivateKey
+	privateKey.D = d_bigint
+	privateKey.Curve = GetSm2P256V1()
+	return &privateKey
 }

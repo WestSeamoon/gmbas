@@ -9,6 +9,7 @@ import (
 	"io"
 	"math/big"
 	"os"
+	"sm2/adaptor"
 	"sm2/normal"
 )
 
@@ -110,4 +111,38 @@ func verify_test() {
 	test_verify := normal.Verify(test_msg, test_sign, test_pub)
 	fmt.Println(test_verify)
 
+}
+
+// 预签名测试
+func presign_test() {
+	test_d := "5DD701828C424B84C5D56770ECF7C4FE882E654CAC53C7CC89A66B1709068B9D"
+	test_msg := "helloworld"
+	test_Y := "05786df292aaa107b3467c6ff99f4e2f51f0dccccdee716e061c2720d0785f0f01e065995e22d4e647f8d9083c17905f2e19982a10495239060f07c949b72df6"
+	test_presign, _ := adaptor.PreSign(test_msg, test_Y, test_d)
+	fmt.Println(test_presign)
+}
+
+// 预签名验证测试
+func preverify_test() {
+	test_msg := "helloworld"
+	test_presign := "0b2074396804f59e6cb11fffe6158d8b8206dda1d71b12c45ae7bb3b7ef8257aeb4d695b5509334a98df7cd1bb1ca46d3f4fb3c39b3beacee432e6a13165df6246b4ad444f264ccdd86378ac4763ca2fcf14780a2142f571b788ff33abdc2b8cff388212b2370f0c26e1fd059b5268b99546d9a245147858a6ce0f710e588836"
+	test_pub := "FF6712D3A7FC0D1B9E01FF471A87EA87525E47C7775039D19304E554DEFE0913F632025F692776D4C13470ECA36AC85D560E794E1BCCF53D82C015988E0EB956"
+	test_preverify := adaptor.PreVerify(test_msg, test_presign, test_pub)
+	fmt.Println(test_preverify)
+}
+
+// 适配测试
+func adaptor_test() {
+	test_y := "166e312d1265863b2ffb589a8294214983d5a3d345416cdf1d978897ff11e839"
+	test_presign := "4227ee599310586e7ed9264aaf7db844a78edd16c3d054e228d0fdbffe6403d38b528d6001a29ea260dfe5792620aa20317def105c661003dc5cb1259e9539630fd0948d3a974dc97e523ed911706d19c863d94362a5922502c398304cd7ec3f3f81a9110af025a962576e47a11e6fadc0e216da6d42d84925a9a8d910d799ff"
+	test_adaptor := adaptor.Adaptor(test_presign, test_y)
+	fmt.Println(test_adaptor)
+}
+
+// 提取测试
+func extract_test() {
+	test_presign := "4227ee599310586e7ed9264aaf7db844a78edd16c3d054e228d0fdbffe6403d38b528d6001a29ea260dfe5792620aa20317def105c661003dc5cb1259e9539630fd0948d3a974dc97e523ed911706d19c863d94362a5922502c398304cd7ec3f3f81a9110af025a962576e47a11e6fadc0e216da6d42d84925a9a8d910d799ff"
+	test_sign := "4227ee599310586e7ed9264aaf7db844a78edd16c3d054e228d0fdbffe6403d3a1c0be8d140824dd90db3e13a8b4cb69b55392e3a1a77ce2f9f439bd9da7219c"
+	test_exacty := adaptor.Extract(test_sign, test_presign)
+	fmt.Println(test_exacty)
 }

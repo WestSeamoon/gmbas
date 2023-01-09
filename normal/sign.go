@@ -7,65 +7,56 @@ import (
 	"sm2/util"
 )
 
-// 私钥格式化
-func PrivToPrivateKey(priv string) *PrivateKey {
-	//d_bigint := StringToBigint(priv)
-	d_bigint := StringToBigint(priv)
-	var privateKey PrivateKey
-	privateKey.D = d_bigint
-	privateKey.Curve = GetSm2P256V1()
-	return &privateKey
-}
-
 // 普通SM2签名计算
-func SignByRS(priv *PrivateKey, digest *big.Int) (r, s *big.Int, err error) {
+func SignByRS(priv *PrivateKey, digest *big.Int) (sig *Sm2Signature, err error) {
 	//pubX, pubY := priv.Curve.ScalarBaseMult(priv.D.Bytes())
 	intZero := new(big.Int).SetInt64(0)
 	intOne := new(big.Int).SetInt64(1)
+	sig = new(Sm2Signature)
 	for {
 		var k *big.Int
 		var err error
 		for {
-			k, err = nextK(rand.Reader, priv.Curve.N)
+			k, err = NextK(rand.Reader, priv.Curve.N)
 			if err != nil {
-				return nil, nil, err
+				return sig, err
 			}
-			kx, _ := priv.Curve.ScalarBaseMult(k.Bytes())
-			r = util.Add(digest, kx)
-			r = util.Mod(r, priv.Curve.N)
+			kx, _ := priv.Curve.ScalarBaseMult(k.Bytes()) //K=kG
+			sig.R = util.Add(digest, kx)                  //H(m)+f(K)
+			sig.R = util.Mod(sig.R, priv.Curve.N)
 
-			if r.Cmp(intZero) != 0 {
+			if sig.R.Cmp(intZero) != 0 {
 				break
 			}
 		}
 
-		dPlus1 := util.Add(priv.D, intOne)
-		s = util.Mul(r, priv.D)
-		s = util.Sub(k, s)
-		s = util.Mul(dPlus1, s)
-		s = util.Mod(s, priv.Curve.N)
+		dPlus1 := util.Add(priv.D, intOne) //1+d
+		sig.S = util.Mul(sig.R, priv.D)    //rd
+		sig.S = util.Sub(k, sig.S)         //k-rd
+		sig.S = util.Mul(dPlus1, sig.S)    //(1+d)(k-rd)? should be (k-rd)/(1+d)
+		sig.S = util.Mod(sig.S, priv.Curve.N)
 
-		if s.Cmp(intZero) != 0 {
+		if sig.S.Cmp(intZero) != 0 {
 			break
 		}
 	}
 
-	return r, s, nil
+	return sig, nil
 }
 
 // 将签名结果转换为string
 func Sm2_Sign(msg, priv string) (string, error) {
 	privateKey := PrivToPrivateKey(priv)
 	digest := MsgToDigest(msg)
-	r, s, err := SignByRS(privateKey, digest)
+	sig, err := SignByRS(privateKey, digest)
 	if err != nil {
 		return "", err
 	}
-	r_bytes := r.Bytes()
-	s_bytes := s.Bytes()
+	r_bytes := sig.R.Bytes()
+	s_bytes := sig.S.Bytes()
 	sig_bytes := append(r_bytes, s_bytes...)
-	sig := hex.EncodeToString(sig_bytes)
+	sign := hex.EncodeToString(sig_bytes)
 
-	return sig, nil
+	return sign, nil
 
 }
