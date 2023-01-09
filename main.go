@@ -21,7 +21,6 @@ func main() {
 		fmt.Println("0.退出")
 		var require int
 		fmt.Scanln(&require)
-		//fmt.Println(require)
 		switch require {
 		case 0:
 			os.Exit(-1)

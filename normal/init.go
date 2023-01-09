@@ -47,6 +47,10 @@ type PrivateKey struct {
 	Curve P256V1Curve
 }
 
+type sm2Signature struct {
+	R, S *big.Int
+}
+
 // init() 初始化国密SM2推荐参数计算得出的椭圆曲线。
 func init() {
 	initSm2P256V1()
